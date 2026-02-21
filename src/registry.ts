@@ -301,66 +301,45 @@ export function isLinearWebhookEvent(value: unknown): boolean {
   return schema.safeParse(value).success;
 }
 
-// ── Config-object style router ──
+// ── Precomputed dispatch index ──
+// Maps eventType → { base route keys, action-specific route keys }
+// Enables O(1) lookup instead of iterating routeKeyInfoMap on every receive.
 
-type WebhookRouteHandlerFunction = (event: unknown) => void | Promise<void>;
+const eventTypeRouteKeys = new Map<
+  string,
+  { base: string[]; byAction: Map<string, string[]> }
+>();
 
-export function createLinearWebhookRouter<Handlers extends WebhookRouteHandlers>(
-  handlers: Handlers,
-): (payload: unknown) => Promise<void> {
-  const routeEntries = Object.entries(handlers)
-    .filter(
-      (entry): entry is [string, WebhookRouteHandlerFunction] =>
-        typeof entry[1] === 'function',
-    )
-    .map(([routeKey, handler]) => {
-      const info = routeKeyInfoMap.get(routeKey);
-      return {
-        routeKey,
-        eventType: info?.eventType,
-        action: info?.action,
-        handler,
-      };
-    })
-    .filter((entry) => entry.eventType !== undefined)
-    .sort((a, b) => Number(Boolean(b.action)) - Number(Boolean(a.action)));
-
-  return async (payload: unknown): Promise<void> => {
-    if (typeof payload !== 'object' || payload === null) return;
-    const obj = payload as Record<string, unknown>;
-    const eventType = obj['type'] as string | undefined;
-    const action = obj['action'] as string | undefined;
-
-    if (!eventType || !isLinearWebhookEventType(eventType)) return;
-
-    // O(1) schema lookup via type field
-    const schema = schemaRegistryMap.get(eventType);
-    if (!schema) return;
-    const parsed = schema.safeParse(payload);
-    if (!parsed.success) return;
-
-    for (const entry of routeEntries) {
-      if (entry.eventType !== eventType) continue;
-      if (entry.action && entry.action !== action) continue;
-
-      await entry.handler(parsed.data);
-      return;
+for (const [key, info] of routeKeyInfoMap) {
+  let entry = eventTypeRouteKeys.get(info.eventType);
+  if (!entry) {
+    entry = { base: [], byAction: new Map() };
+    eventTypeRouteKeys.set(info.eventType, entry);
+  }
+  if (info.action) {
+    let list = entry.byAction.get(info.action);
+    if (!list) {
+      list = [];
+      entry.byAction.set(info.action, list);
     }
-  };
+    list.push(key);
+  } else {
+    entry.base.push(key);
+  }
 }
 
-// ── Event-emitter style router ──
+// ── Webhook Router ──
 
 export interface WebhookRouter {
-  on<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): this;
-  on(event: 'error', handler: WebhookErrorHandler): this;
-  off<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): this;
-  off(event: 'error', handler: WebhookErrorHandler): this;
-  removeAllListeners(event?: string): this;
-  receive(payload: unknown): void;
+  (payload: unknown): void;
+  on<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): WebhookRouter;
+  on(event: 'error', handler: WebhookErrorHandler): WebhookRouter;
+  off<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): WebhookRouter;
+  off(event: 'error', handler: WebhookErrorHandler): WebhookRouter;
+  removeAllListeners(event?: string): WebhookRouter;
 }
 
-export function createWebhookRouter(): WebhookRouter {
+export function createLinearWebhookRouter(handlers?: WebhookRouteHandlers): WebhookRouter {
   type Handler = (arg: unknown) => void | Promise<void>;
   const listeners = new Map<string, Set<Handler>>();
 
@@ -384,77 +363,86 @@ export function createWebhookRouter(): WebhookRouter {
     }
   }
 
-  const router: WebhookRouter = {
-    on(event: string, handler: Handler) {
-      getListeners(event).add(handler);
-      return router;
-    },
-
-    off(event: string, handler: Handler) {
-      listeners.get(event)?.delete(handler);
-      return router;
-    },
-
-    removeAllListeners(event?: string) {
-      if (event) {
-        listeners.delete(event);
-      } else {
-        listeners.clear();
+  function callHandler(handler: Handler, data: unknown): void {
+    try {
+      const result = handler(data);
+      if (result instanceof Promise) {
+        result.catch(handleError);
       }
-      return router;
-    },
+    } catch (err) {
+      handleError(err);
+    }
+  }
 
-    receive(payload: unknown) {
-      if (typeof payload !== 'object' || payload === null) return;
-      const obj = payload as Record<string, unknown>;
-      const eventType = obj['type'] as string | undefined;
-      const action = obj['action'] as string | undefined;
+  // Register initial handlers from config object
+  if (handlers) {
+    for (const [key, handler] of Object.entries(handlers)) {
+      if (typeof handler === 'function') {
+        getListeners(key).add(handler as Handler);
+      }
+    }
+  }
 
-      if (!eventType || !isLinearWebhookEventType(eventType)) return;
+  const receive = function receive(payload: unknown): void {
+    if (typeof payload !== 'object' || payload === null) return;
+    const obj = payload as Record<string, unknown>;
+    const eventType = obj['type'] as string | undefined;
+    const action = obj['action'] as string | undefined;
 
-      // O(1) schema lookup via type field
-      const schema = schemaRegistryMap.get(eventType);
-      if (!schema) return;
-      const parsed = schema.safeParse(payload);
-      if (!parsed.success) return;
+    if (!eventType || !isLinearWebhookEventType(eventType)) return;
 
-      // Build the camelCase base key from event type
-      const camelBase = eventType.charAt(0).toLowerCase() + eventType.slice(1);
+    // O(1) schema lookup via type field
+    const schema = schemaRegistryMap.get(eventType);
+    if (!schema) return;
+    const parsed = schema.safeParse(payload);
+    if (!parsed.success) return;
 
-      // Emit action-specific event first (more specific)
-      if (action) {
-        const actionPascal = action.charAt(0).toUpperCase() + action.slice(1);
-        const camelActionKey = camelBase + actionPascal;
-        const actionListeners = listeners.get(camelActionKey);
-        if (actionListeners) {
-          for (const handler of actionListeners) {
-            try {
-              const result = handler(parsed.data);
-              if (result instanceof Promise) {
-                result.catch(handleError);
-              }
-            } catch (err) {
-              handleError(err);
-            }
+    const routeKeys = eventTypeRouteKeys.get(eventType);
+    if (!routeKeys) return;
+
+    // Fire action-specific handlers first (more specific)
+    if (action) {
+      const actionKeys = routeKeys.byAction.get(action);
+      if (actionKeys) {
+        for (const key of actionKeys) {
+          const set = listeners.get(key);
+          if (!set) continue;
+          for (const handler of set) {
+            callHandler(handler, parsed.data);
           }
         }
       }
+    }
 
-      // Emit base event
-      const baseListeners = listeners.get(camelBase);
-      if (baseListeners) {
-        for (const handler of baseListeners) {
-          try {
-            const result = handler(parsed.data);
-            if (result instanceof Promise) {
-              result.catch(handleError);
-            }
-          } catch (err) {
-            handleError(err);
-          }
-        }
+    // Fire base handlers
+    for (const key of routeKeys.base) {
+      const set = listeners.get(key);
+      if (!set) continue;
+      for (const handler of set) {
+        callHandler(handler, parsed.data);
       }
-    },
+    }
+  };
+
+  const router = receive as WebhookRouter;
+
+  router.on = (event: string, handler: Handler) => {
+    getListeners(event).add(handler);
+    return router;
+  };
+
+  router.off = (event: string, handler: Handler) => {
+    listeners.get(event)?.delete(handler);
+    return router;
+  };
+
+  router.removeAllListeners = (event?: string) => {
+    if (event) {
+      listeners.delete(event);
+    } else {
+      listeners.clear();
+    }
+    return router;
   };
 
   return router;
