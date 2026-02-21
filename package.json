@@ -1,0 +1,458 @@
+{
+  "name": "linear-webhook-schemas",
+  "version": "0.1.0",
+  "description": "Zod schemas for validating Linear webhook payloads",
+  "keywords": [
+    "linear",
+    "webhook",
+    "webhooks",
+    "zod",
+    "schema",
+    "validation",
+    "typescript",
+    "type-safe"
+  ],
+  "license": "MIT",
+  "author": "Steve Kinney <hello@stevekinney.net>",
+  "type": "module",
+  "exports": {
+    "./agent-session-event": {
+      "types": "./dist/schemas/agent-session-event.d.ts",
+      "bun": "./dist/schemas/agent-session-event.js",
+      "import": "./dist/schemas/agent-session-event.js",
+      "default": "./dist/schemas/agent-session-event.js"
+    },
+    "./app-user-notification-event": {
+      "types": "./dist/schemas/app-user-notification-event.d.ts",
+      "bun": "./dist/schemas/app-user-notification-event.js",
+      "import": "./dist/schemas/app-user-notification-event.js",
+      "default": "./dist/schemas/app-user-notification-event.js"
+    },
+    "./attachment-create-event": {
+      "types": "./dist/schemas/attachment-create-event.d.ts",
+      "bun": "./dist/schemas/attachment-create-event.js",
+      "import": "./dist/schemas/attachment-create-event.js",
+      "default": "./dist/schemas/attachment-create-event.js"
+    },
+    "./attachment-remove-event": {
+      "types": "./dist/schemas/attachment-remove-event.d.ts",
+      "bun": "./dist/schemas/attachment-remove-event.js",
+      "import": "./dist/schemas/attachment-remove-event.js",
+      "default": "./dist/schemas/attachment-remove-event.js"
+    },
+    "./attachment-update-event": {
+      "types": "./dist/schemas/attachment-update-event.d.ts",
+      "bun": "./dist/schemas/attachment-update-event.js",
+      "import": "./dist/schemas/attachment-update-event.js",
+      "default": "./dist/schemas/attachment-update-event.js"
+    },
+    "./audit-entry-create-event": {
+      "types": "./dist/schemas/audit-entry-create-event.d.ts",
+      "bun": "./dist/schemas/audit-entry-create-event.js",
+      "import": "./dist/schemas/audit-entry-create-event.js",
+      "default": "./dist/schemas/audit-entry-create-event.js"
+    },
+    "./audit-entry-remove-event": {
+      "types": "./dist/schemas/audit-entry-remove-event.d.ts",
+      "bun": "./dist/schemas/audit-entry-remove-event.js",
+      "import": "./dist/schemas/audit-entry-remove-event.js",
+      "default": "./dist/schemas/audit-entry-remove-event.js"
+    },
+    "./audit-entry-update-event": {
+      "types": "./dist/schemas/audit-entry-update-event.d.ts",
+      "bun": "./dist/schemas/audit-entry-update-event.js",
+      "import": "./dist/schemas/audit-entry-update-event.js",
+      "default": "./dist/schemas/audit-entry-update-event.js"
+    },
+    "./comment-create-event": {
+      "types": "./dist/schemas/comment-create-event.d.ts",
+      "bun": "./dist/schemas/comment-create-event.js",
+      "import": "./dist/schemas/comment-create-event.js",
+      "default": "./dist/schemas/comment-create-event.js"
+    },
+    "./comment-remove-event": {
+      "types": "./dist/schemas/comment-remove-event.d.ts",
+      "bun": "./dist/schemas/comment-remove-event.js",
+      "import": "./dist/schemas/comment-remove-event.js",
+      "default": "./dist/schemas/comment-remove-event.js"
+    },
+    "./comment-update-event": {
+      "types": "./dist/schemas/comment-update-event.d.ts",
+      "bun": "./dist/schemas/comment-update-event.js",
+      "import": "./dist/schemas/comment-update-event.js",
+      "default": "./dist/schemas/comment-update-event.js"
+    },
+    "./customer-create-event": {
+      "types": "./dist/schemas/customer-create-event.d.ts",
+      "bun": "./dist/schemas/customer-create-event.js",
+      "import": "./dist/schemas/customer-create-event.js",
+      "default": "./dist/schemas/customer-create-event.js"
+    },
+    "./customer-need-create-event": {
+      "types": "./dist/schemas/customer-need-create-event.d.ts",
+      "bun": "./dist/schemas/customer-need-create-event.js",
+      "import": "./dist/schemas/customer-need-create-event.js",
+      "default": "./dist/schemas/customer-need-create-event.js"
+    },
+    "./customer-need-remove-event": {
+      "types": "./dist/schemas/customer-need-remove-event.d.ts",
+      "bun": "./dist/schemas/customer-need-remove-event.js",
+      "import": "./dist/schemas/customer-need-remove-event.js",
+      "default": "./dist/schemas/customer-need-remove-event.js"
+    },
+    "./customer-need-update-event": {
+      "types": "./dist/schemas/customer-need-update-event.d.ts",
+      "bun": "./dist/schemas/customer-need-update-event.js",
+      "import": "./dist/schemas/customer-need-update-event.js",
+      "default": "./dist/schemas/customer-need-update-event.js"
+    },
+    "./customer-remove-event": {
+      "types": "./dist/schemas/customer-remove-event.d.ts",
+      "bun": "./dist/schemas/customer-remove-event.js",
+      "import": "./dist/schemas/customer-remove-event.js",
+      "default": "./dist/schemas/customer-remove-event.js"
+    },
+    "./customer-update-event": {
+      "types": "./dist/schemas/customer-update-event.d.ts",
+      "bun": "./dist/schemas/customer-update-event.js",
+      "import": "./dist/schemas/customer-update-event.js",
+      "default": "./dist/schemas/customer-update-event.js"
+    },
+    "./cycle-create-event": {
+      "types": "./dist/schemas/cycle-create-event.d.ts",
+      "bun": "./dist/schemas/cycle-create-event.js",
+      "import": "./dist/schemas/cycle-create-event.js",
+      "default": "./dist/schemas/cycle-create-event.js"
+    },
+    "./cycle-remove-event": {
+      "types": "./dist/schemas/cycle-remove-event.d.ts",
+      "bun": "./dist/schemas/cycle-remove-event.js",
+      "import": "./dist/schemas/cycle-remove-event.js",
+      "default": "./dist/schemas/cycle-remove-event.js"
+    },
+    "./cycle-update-event": {
+      "types": "./dist/schemas/cycle-update-event.d.ts",
+      "bun": "./dist/schemas/cycle-update-event.js",
+      "import": "./dist/schemas/cycle-update-event.js",
+      "default": "./dist/schemas/cycle-update-event.js"
+    },
+    "./document-create-event": {
+      "types": "./dist/schemas/document-create-event.d.ts",
+      "bun": "./dist/schemas/document-create-event.js",
+      "import": "./dist/schemas/document-create-event.js",
+      "default": "./dist/schemas/document-create-event.js"
+    },
+    "./document-remove-event": {
+      "types": "./dist/schemas/document-remove-event.d.ts",
+      "bun": "./dist/schemas/document-remove-event.js",
+      "import": "./dist/schemas/document-remove-event.js",
+      "default": "./dist/schemas/document-remove-event.js"
+    },
+    "./document-update-event": {
+      "types": "./dist/schemas/document-update-event.d.ts",
+      "bun": "./dist/schemas/document-update-event.js",
+      "import": "./dist/schemas/document-update-event.js",
+      "default": "./dist/schemas/document-update-event.js"
+    },
+    "./initiative-create-event": {
+      "types": "./dist/schemas/initiative-create-event.d.ts",
+      "bun": "./dist/schemas/initiative-create-event.js",
+      "import": "./dist/schemas/initiative-create-event.js",
+      "default": "./dist/schemas/initiative-create-event.js"
+    },
+    "./initiative-remove-event": {
+      "types": "./dist/schemas/initiative-remove-event.d.ts",
+      "bun": "./dist/schemas/initiative-remove-event.js",
+      "import": "./dist/schemas/initiative-remove-event.js",
+      "default": "./dist/schemas/initiative-remove-event.js"
+    },
+    "./initiative-update-create-event": {
+      "types": "./dist/schemas/initiative-update-create-event.d.ts",
+      "bun": "./dist/schemas/initiative-update-create-event.js",
+      "import": "./dist/schemas/initiative-update-create-event.js",
+      "default": "./dist/schemas/initiative-update-create-event.js"
+    },
+    "./initiative-update-event": {
+      "types": "./dist/schemas/initiative-update-event.d.ts",
+      "bun": "./dist/schemas/initiative-update-event.js",
+      "import": "./dist/schemas/initiative-update-event.js",
+      "default": "./dist/schemas/initiative-update-event.js"
+    },
+    "./initiative-update-remove-event": {
+      "types": "./dist/schemas/initiative-update-remove-event.d.ts",
+      "bun": "./dist/schemas/initiative-update-remove-event.js",
+      "import": "./dist/schemas/initiative-update-remove-event.js",
+      "default": "./dist/schemas/initiative-update-remove-event.js"
+    },
+    "./initiative-update-update-event": {
+      "types": "./dist/schemas/initiative-update-update-event.d.ts",
+      "bun": "./dist/schemas/initiative-update-update-event.js",
+      "import": "./dist/schemas/initiative-update-update-event.js",
+      "default": "./dist/schemas/initiative-update-update-event.js"
+    },
+    "./issue-create-event": {
+      "types": "./dist/schemas/issue-create-event.d.ts",
+      "bun": "./dist/schemas/issue-create-event.js",
+      "import": "./dist/schemas/issue-create-event.js",
+      "default": "./dist/schemas/issue-create-event.js"
+    },
+    "./issue-label-create-event": {
+      "types": "./dist/schemas/issue-label-create-event.d.ts",
+      "bun": "./dist/schemas/issue-label-create-event.js",
+      "import": "./dist/schemas/issue-label-create-event.js",
+      "default": "./dist/schemas/issue-label-create-event.js"
+    },
+    "./issue-label-remove-event": {
+      "types": "./dist/schemas/issue-label-remove-event.d.ts",
+      "bun": "./dist/schemas/issue-label-remove-event.js",
+      "import": "./dist/schemas/issue-label-remove-event.js",
+      "default": "./dist/schemas/issue-label-remove-event.js"
+    },
+    "./issue-label-update-event": {
+      "types": "./dist/schemas/issue-label-update-event.d.ts",
+      "bun": "./dist/schemas/issue-label-update-event.js",
+      "import": "./dist/schemas/issue-label-update-event.js",
+      "default": "./dist/schemas/issue-label-update-event.js"
+    },
+    "./issue-remove-event": {
+      "types": "./dist/schemas/issue-remove-event.d.ts",
+      "bun": "./dist/schemas/issue-remove-event.js",
+      "import": "./dist/schemas/issue-remove-event.js",
+      "default": "./dist/schemas/issue-remove-event.js"
+    },
+    "./issue-sla-event": {
+      "types": "./dist/schemas/issue-sla-event.d.ts",
+      "bun": "./dist/schemas/issue-sla-event.js",
+      "import": "./dist/schemas/issue-sla-event.js",
+      "default": "./dist/schemas/issue-sla-event.js"
+    },
+    "./issue-update-event": {
+      "types": "./dist/schemas/issue-update-event.d.ts",
+      "bun": "./dist/schemas/issue-update-event.js",
+      "import": "./dist/schemas/issue-update-event.js",
+      "default": "./dist/schemas/issue-update-event.js"
+    },
+    "./oauth-app-revoked-event": {
+      "types": "./dist/schemas/oauth-app-revoked-event.d.ts",
+      "bun": "./dist/schemas/oauth-app-revoked-event.js",
+      "import": "./dist/schemas/oauth-app-revoked-event.js",
+      "default": "./dist/schemas/oauth-app-revoked-event.js"
+    },
+    "./permission-change-event": {
+      "types": "./dist/schemas/permission-change-event.d.ts",
+      "bun": "./dist/schemas/permission-change-event.js",
+      "import": "./dist/schemas/permission-change-event.js",
+      "default": "./dist/schemas/permission-change-event.js"
+    },
+    "./project-create-event": {
+      "types": "./dist/schemas/project-create-event.d.ts",
+      "bun": "./dist/schemas/project-create-event.js",
+      "import": "./dist/schemas/project-create-event.js",
+      "default": "./dist/schemas/project-create-event.js"
+    },
+    "./project-remove-event": {
+      "types": "./dist/schemas/project-remove-event.d.ts",
+      "bun": "./dist/schemas/project-remove-event.js",
+      "import": "./dist/schemas/project-remove-event.js",
+      "default": "./dist/schemas/project-remove-event.js"
+    },
+    "./project-update-create-event": {
+      "types": "./dist/schemas/project-update-create-event.d.ts",
+      "bun": "./dist/schemas/project-update-create-event.js",
+      "import": "./dist/schemas/project-update-create-event.js",
+      "default": "./dist/schemas/project-update-create-event.js"
+    },
+    "./project-update-event": {
+      "types": "./dist/schemas/project-update-event.d.ts",
+      "bun": "./dist/schemas/project-update-event.js",
+      "import": "./dist/schemas/project-update-event.js",
+      "default": "./dist/schemas/project-update-event.js"
+    },
+    "./project-update-remove-event": {
+      "types": "./dist/schemas/project-update-remove-event.d.ts",
+      "bun": "./dist/schemas/project-update-remove-event.js",
+      "import": "./dist/schemas/project-update-remove-event.js",
+      "default": "./dist/schemas/project-update-remove-event.js"
+    },
+    "./project-update-update-event": {
+      "types": "./dist/schemas/project-update-update-event.d.ts",
+      "bun": "./dist/schemas/project-update-update-event.js",
+      "import": "./dist/schemas/project-update-update-event.js",
+      "default": "./dist/schemas/project-update-update-event.js"
+    },
+    "./reaction-create-event": {
+      "types": "./dist/schemas/reaction-create-event.d.ts",
+      "bun": "./dist/schemas/reaction-create-event.js",
+      "import": "./dist/schemas/reaction-create-event.js",
+      "default": "./dist/schemas/reaction-create-event.js"
+    },
+    "./reaction-remove-event": {
+      "types": "./dist/schemas/reaction-remove-event.d.ts",
+      "bun": "./dist/schemas/reaction-remove-event.js",
+      "import": "./dist/schemas/reaction-remove-event.js",
+      "default": "./dist/schemas/reaction-remove-event.js"
+    },
+    "./reaction-update-event": {
+      "types": "./dist/schemas/reaction-update-event.d.ts",
+      "bun": "./dist/schemas/reaction-update-event.js",
+      "import": "./dist/schemas/reaction-update-event.js",
+      "default": "./dist/schemas/reaction-update-event.js"
+    },
+    "./user-create-event": {
+      "types": "./dist/schemas/user-create-event.d.ts",
+      "bun": "./dist/schemas/user-create-event.js",
+      "import": "./dist/schemas/user-create-event.js",
+      "default": "./dist/schemas/user-create-event.js"
+    },
+    "./user-remove-event": {
+      "types": "./dist/schemas/user-remove-event.d.ts",
+      "bun": "./dist/schemas/user-remove-event.js",
+      "import": "./dist/schemas/user-remove-event.js",
+      "default": "./dist/schemas/user-remove-event.js"
+    },
+    "./user-update-event": {
+      "types": "./dist/schemas/user-update-event.d.ts",
+      "bun": "./dist/schemas/user-update-event.js",
+      "import": "./dist/schemas/user-update-event.js",
+      "default": "./dist/schemas/user-update-event.js"
+    },
+    "./shared/actor": {
+      "types": "./dist/schemas/shared/actor.d.ts",
+      "bun": "./dist/schemas/shared/actor.js",
+      "import": "./dist/schemas/shared/actor.js",
+      "default": "./dist/schemas/shared/actor.js"
+    },
+    "./shared/attachment": {
+      "types": "./dist/schemas/shared/attachment.d.ts",
+      "bun": "./dist/schemas/shared/attachment.js",
+      "import": "./dist/schemas/shared/attachment.js",
+      "default": "./dist/schemas/shared/attachment.js"
+    },
+    "./shared/audit-entry": {
+      "types": "./dist/schemas/shared/audit-entry.d.ts",
+      "bun": "./dist/schemas/shared/audit-entry.js",
+      "import": "./dist/schemas/shared/audit-entry.js",
+      "default": "./dist/schemas/shared/audit-entry.js"
+    },
+    "./shared/comment": {
+      "types": "./dist/schemas/shared/comment.d.ts",
+      "bun": "./dist/schemas/shared/comment.js",
+      "import": "./dist/schemas/shared/comment.js",
+      "default": "./dist/schemas/shared/comment.js"
+    },
+    "./shared/customer": {
+      "types": "./dist/schemas/shared/customer.d.ts",
+      "bun": "./dist/schemas/shared/customer.js",
+      "import": "./dist/schemas/shared/customer.js",
+      "default": "./dist/schemas/shared/customer.js"
+    },
+    "./shared/customer-need": {
+      "types": "./dist/schemas/shared/customer-need.d.ts",
+      "bun": "./dist/schemas/shared/customer-need.js",
+      "import": "./dist/schemas/shared/customer-need.js",
+      "default": "./dist/schemas/shared/customer-need.js"
+    },
+    "./shared/cycle": {
+      "types": "./dist/schemas/shared/cycle.d.ts",
+      "bun": "./dist/schemas/shared/cycle.js",
+      "import": "./dist/schemas/shared/cycle.js",
+      "default": "./dist/schemas/shared/cycle.js"
+    },
+    "./shared/document": {
+      "types": "./dist/schemas/shared/document.d.ts",
+      "bun": "./dist/schemas/shared/document.js",
+      "import": "./dist/schemas/shared/document.js",
+      "default": "./dist/schemas/shared/document.js"
+    },
+    "./shared/initiative": {
+      "types": "./dist/schemas/shared/initiative.d.ts",
+      "bun": "./dist/schemas/shared/initiative.js",
+      "import": "./dist/schemas/shared/initiative.js",
+      "default": "./dist/schemas/shared/initiative.js"
+    },
+    "./shared/initiative-update": {
+      "types": "./dist/schemas/shared/initiative-update.d.ts",
+      "bun": "./dist/schemas/shared/initiative-update.js",
+      "import": "./dist/schemas/shared/initiative-update.js",
+      "default": "./dist/schemas/shared/initiative-update.js"
+    },
+    "./shared/issue": {
+      "types": "./dist/schemas/shared/issue.d.ts",
+      "bun": "./dist/schemas/shared/issue.js",
+      "import": "./dist/schemas/shared/issue.js",
+      "default": "./dist/schemas/shared/issue.js"
+    },
+    "./shared/issue-label": {
+      "types": "./dist/schemas/shared/issue-label.d.ts",
+      "bun": "./dist/schemas/shared/issue-label.js",
+      "import": "./dist/schemas/shared/issue-label.js",
+      "default": "./dist/schemas/shared/issue-label.js"
+    },
+    "./shared/project": {
+      "types": "./dist/schemas/shared/project.d.ts",
+      "bun": "./dist/schemas/shared/project.js",
+      "import": "./dist/schemas/shared/project.js",
+      "default": "./dist/schemas/shared/project.js"
+    },
+    "./shared/project-update": {
+      "types": "./dist/schemas/shared/project-update.d.ts",
+      "bun": "./dist/schemas/shared/project-update.js",
+      "import": "./dist/schemas/shared/project-update.js",
+      "default": "./dist/schemas/shared/project-update.js"
+    },
+    "./shared/reaction": {
+      "types": "./dist/schemas/shared/reaction.d.ts",
+      "bun": "./dist/schemas/shared/reaction.js",
+      "import": "./dist/schemas/shared/reaction.js",
+      "default": "./dist/schemas/shared/reaction.js"
+    },
+    "./shared/user": {
+      "types": "./dist/schemas/shared/user.d.ts",
+      "bun": "./dist/schemas/shared/user.js",
+      "import": "./dist/schemas/shared/user.js",
+      "default": "./dist/schemas/shared/user.js"
+    },
+    "./shared/webhook-envelope": {
+      "types": "./dist/schemas/shared/webhook-envelope.d.ts",
+      "bun": "./dist/schemas/shared/webhook-envelope.js",
+      "import": "./dist/schemas/shared/webhook-envelope.js",
+      "default": "./dist/schemas/shared/webhook-envelope.js"
+    },
+    "./fixtures": {
+      "types": "./dist/fixtures/index.d.ts",
+      "bun": "./dist/fixtures/index.js",
+      "import": "./dist/fixtures/index.js",
+      "default": "./dist/fixtures/index.js"
+    },
+    "./event-types": {
+      "types": "./dist/event-types.d.ts",
+      "bun": "./dist/event-types.js",
+      "import": "./dist/event-types.js",
+      "default": "./dist/event-types.js"
+    },
+    "./registry": {
+      "types": "./dist/registry.d.ts",
+      "bun": "./dist/registry.js",
+      "import": "./dist/registry.js",
+      "default": "./dist/registry.js"
+    }
+  },
+  "scripts": {
+    "build": "bun run update:exports && bun run scripts/build.ts",
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit",
+    "update:exports": "bun run scripts/update-exports.ts"
+  },
+  "devDependencies": {
+    "@linear/sdk": "^37.0.0",
+    "@types/bun": "^1.2.0",
+    "chalk": "^5.4.1",
+    "prettier": "^3.5.0",
+    "sort-package-json": "^2.12.0",
+    "typescript": "^5.7.0",
+    "zod": "^3.24.0"
+  },
+  "peerDependencies": {
+    "zod": "^3.0.0 || ^4.0.0"
+  }
+}
