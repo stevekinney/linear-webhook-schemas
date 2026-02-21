@@ -6,7 +6,6 @@ export {
   allEventSchemas,
   routeKeyInfoMap,
   createLinearWebhookRouter,
-  createWebhookRouter,
   isLinearWebhookEvent,
   verifyWebhookSignature,
   LINEAR_WEBHOOK_SIGNATURE_HEADER,
