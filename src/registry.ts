@@ -118,8 +118,12 @@ export const allEventSchemas: z.ZodTypeAny[] = [
  * Typed schema lookup by event type.
  */
 export const schemas = {
-  get(eventType: LinearWebhookEventType): z.ZodTypeAny | undefined {
-    return schemaRegistryMap.get(eventType);
+  get(eventType: LinearWebhookEventType): z.ZodTypeAny {
+    const schema = schemaRegistryMap.get(eventType);
+    if (!schema) {
+      throw new Error(`No schema registered for event type: ${eventType}`);
+    }
+    return schema;
   },
 };
 
@@ -279,9 +283,11 @@ export type WebhookHandler<K extends WebhookRouteKey> = (
   event: WebhookRouteEvent<K>,
 ) => void | Promise<void>;
 
-export type WebhookRouteHandlers = {
-  [K in WebhookRouteKey]?: WebhookHandler<K>;
-};
+export type WebhookErrorHandler = (error: unknown) => void;
+
+export type WebhookRouteHandlers = Partial<{
+  [K in WebhookRouteKey]: WebhookHandler<K>;
+}>;
 
 // ── Type guard ──
 
@@ -297,91 +303,29 @@ export function isLinearWebhookEvent(value: unknown): boolean {
 
 // ── Config-object style router ──
 
-export function createLinearWebhookRouter(handlers: WebhookRouteHandlers) {
-  // Pre-sort: action-specific handlers first, then base handlers
-  const sortedEntries = Object.entries(handlers).sort(([a], [b]) => {
-    const aInfo = routeKeyInfoMap.get(a);
-    const bInfo = routeKeyInfoMap.get(b);
-    const aSpecific = aInfo?.action ? 0 : 1;
-    const bSpecific = bInfo?.action ? 0 : 1;
-    return aSpecific - bSpecific;
-  });
+type WebhookRouteHandlerFunction = (event: unknown) => void | Promise<void>;
 
-  return async (payload: unknown): Promise<boolean> => {
-    if (typeof payload !== 'object' || payload === null) return false;
-    const obj = payload as Record<string, unknown>;
-    const eventType = obj['type'] as string | undefined;
-    const action = obj['action'] as string | undefined;
+export function createLinearWebhookRouter<Handlers extends WebhookRouteHandlers>(
+  handlers: Handlers,
+): (payload: unknown) => Promise<void> {
+  const routeEntries = Object.entries(handlers)
+    .filter(
+      (entry): entry is [string, WebhookRouteHandlerFunction] =>
+        typeof entry[1] === 'function',
+    )
+    .map(([routeKey, handler]) => {
+      const info = routeKeyInfoMap.get(routeKey);
+      return {
+        routeKey,
+        eventType: info?.eventType,
+        action: info?.action,
+        handler,
+      };
+    })
+    .filter((entry) => entry.eventType !== undefined)
+    .sort((a, b) => Number(Boolean(b.action)) - Number(Boolean(a.action)));
 
-    for (const [key, handler] of sortedEntries) {
-      if (!handler) continue;
-      const info = routeKeyInfoMap.get(key);
-      if (!info) continue;
-
-      // Match event type
-      if (info.eventType !== eventType) continue;
-
-      // Match action if specified
-      if (info.action && info.action !== action) continue;
-
-      // Validate against the event type's schema
-      const schema = schemaRegistryMap.get(info.eventType);
-      if (!schema) continue;
-      const result = schema.safeParse(payload);
-      if (!result.success) continue;
-
-      await (handler as (event: unknown) => void | Promise<void>)(result.data);
-      return true;
-    }
-
-    return false;
-  };
-}
-
-// ── Event-emitter style router ──
-
-export interface WebhookRouter {
-  on<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): void;
-  off<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): void;
-  removeAllListeners(event?: WebhookRouteKey): void;
-  receive(payload: unknown): Promise<void>;
-}
-
-export function createWebhookRouter(): WebhookRouter {
-  const listeners = new Map<string, Set<(event: unknown) => void | Promise<void>>>();
-  let errorHandler: ((error: Error) => void) | undefined;
-
-  function on<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): void {
-    if (event === ('error' as WebhookRouteKey)) {
-      errorHandler = handler as unknown as (error: Error) => void;
-      return;
-    }
-    let set = listeners.get(event);
-    if (!set) {
-      set = new Set();
-      listeners.set(event, set);
-    }
-    set.add(handler as (event: unknown) => void | Promise<void>);
-  }
-
-  function off<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): void {
-    const set = listeners.get(event);
-    if (set) {
-      set.delete(handler as (event: unknown) => void | Promise<void>);
-      if (set.size === 0) listeners.delete(event);
-    }
-  }
-
-  function removeAllListeners(event?: WebhookRouteKey): void {
-    if (event) {
-      listeners.delete(event);
-    } else {
-      listeners.clear();
-      errorHandler = undefined;
-    }
-  }
-
-  async function receive(payload: unknown): Promise<void> {
+  return async (payload: unknown): Promise<void> => {
     if (typeof payload !== 'object' || payload === null) return;
     const obj = payload as Record<string, unknown>;
     const eventType = obj['type'] as string | undefined;
@@ -389,52 +333,131 @@ export function createWebhookRouter(): WebhookRouter {
 
     if (!eventType || !isLinearWebhookEventType(eventType)) return;
 
+    // O(1) schema lookup via type field
     const schema = schemaRegistryMap.get(eventType);
     if (!schema) return;
-    const result = schema.safeParse(payload);
-    if (!result.success) return;
+    const parsed = schema.safeParse(payload);
+    if (!parsed.success) return;
 
-    const parsed = result.data as Record<string, unknown>;
+    for (const entry of routeEntries) {
+      if (entry.eventType !== eventType) continue;
+      if (entry.action && entry.action !== action) continue;
 
-    // Find matching listeners
-    const handlersToCall: Array<{
-      key: string;
-      handlers: Set<(event: unknown) => void | Promise<void>>;
-    }> = [];
-
-    for (const [key, set] of listeners) {
-      const info = routeKeyInfoMap.get(key);
-      if (!info) continue;
-      if (info.eventType !== eventType) continue;
-      if (info.action && info.action !== action) continue;
-      handlersToCall.push({ key, handlers: set });
+      await entry.handler(parsed.data);
+      return;
     }
+  };
+}
 
-    // Sort: action-specific first, then base
-    handlersToCall.sort((a, b) => {
-      const aInfo = routeKeyInfoMap.get(a.key);
-      const bInfo = routeKeyInfoMap.get(b.key);
-      const aSpecific = aInfo?.action ? 0 : 1;
-      const bSpecific = bInfo?.action ? 0 : 1;
-      return aSpecific - bSpecific;
-    });
+// ── Event-emitter style router ──
 
-    for (const { handlers } of handlersToCall) {
-      for (const handler of handlers) {
-        try {
-          await handler(parsed);
-        } catch (err) {
-          if (errorHandler) {
-            errorHandler(err instanceof Error ? err : new Error(String(err)));
-          } else {
-            throw err;
-          }
-        }
+export interface WebhookRouter {
+  on<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): this;
+  on(event: 'error', handler: WebhookErrorHandler): this;
+  off<K extends WebhookRouteKey>(event: K, handler: WebhookHandler<K>): this;
+  off(event: 'error', handler: WebhookErrorHandler): this;
+  removeAllListeners(event?: string): this;
+  receive(payload: unknown): void;
+}
+
+export function createWebhookRouter(): WebhookRouter {
+  type Handler = (arg: unknown) => void | Promise<void>;
+  const listeners = new Map<string, Set<Handler>>();
+
+  function getListeners(event: string): Set<Handler> {
+    let set = listeners.get(event);
+    if (!set) {
+      set = new Set();
+      listeners.set(event, set);
+    }
+    return set;
+  }
+
+  function handleError(error: unknown): void {
+    const errorListeners = listeners.get('error');
+    if (errorListeners && errorListeners.size > 0) {
+      for (const handler of errorListeners) {
+        void handler(error);
       }
+    } else {
+      throw error;
     }
   }
 
-  return { on, off, removeAllListeners, receive };
+  const router: WebhookRouter = {
+    on(event: string, handler: Handler) {
+      getListeners(event).add(handler);
+      return router;
+    },
+
+    off(event: string, handler: Handler) {
+      listeners.get(event)?.delete(handler);
+      return router;
+    },
+
+    removeAllListeners(event?: string) {
+      if (event) {
+        listeners.delete(event);
+      } else {
+        listeners.clear();
+      }
+      return router;
+    },
+
+    receive(payload: unknown) {
+      if (typeof payload !== 'object' || payload === null) return;
+      const obj = payload as Record<string, unknown>;
+      const eventType = obj['type'] as string | undefined;
+      const action = obj['action'] as string | undefined;
+
+      if (!eventType || !isLinearWebhookEventType(eventType)) return;
+
+      // O(1) schema lookup via type field
+      const schema = schemaRegistryMap.get(eventType);
+      if (!schema) return;
+      const parsed = schema.safeParse(payload);
+      if (!parsed.success) return;
+
+      // Build the camelCase base key from event type
+      const camelBase = eventType.charAt(0).toLowerCase() + eventType.slice(1);
+
+      // Emit action-specific event first (more specific)
+      if (action) {
+        const actionPascal = action.charAt(0).toUpperCase() + action.slice(1);
+        const camelActionKey = camelBase + actionPascal;
+        const actionListeners = listeners.get(camelActionKey);
+        if (actionListeners) {
+          for (const handler of actionListeners) {
+            try {
+              const result = handler(parsed.data);
+              if (result instanceof Promise) {
+                result.catch(handleError);
+              }
+            } catch (err) {
+              handleError(err);
+            }
+          }
+        }
+      }
+
+      // Emit base event
+      const baseListeners = listeners.get(camelBase);
+      if (baseListeners) {
+        for (const handler of baseListeners) {
+          try {
+            const result = handler(parsed.data);
+            if (result instanceof Promise) {
+              result.catch(handleError);
+            }
+          } catch (err) {
+            handleError(err);
+          }
+        }
+      }
+    },
+  };
+
+  return router;
 }
 
 // ── Signature verification ──

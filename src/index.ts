@@ -17,6 +17,7 @@ export type {
   WebhookRouteKeyEventMap,
   WebhookRouteEvent,
   WebhookHandler,
+  WebhookErrorHandler,
   WebhookRouteHandlers,
   WebhookRouter,
 } from './registry.js';
